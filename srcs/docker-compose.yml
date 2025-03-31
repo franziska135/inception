@@ -1,0 +1,76 @@
+version: '3.9'
+
+services:
+ nginx:
+  build: requirements/nginx/
+  container_name: nginx
+  ports:
+   - "443:443"
+  networks:
+   - inception
+  restart: always
+  volumes:
+   - wordpress:/var/www/html
+  depends_on:
+   - wordpress
+   - mariadb
+ 
+ mariadb:
+  build: requirements/mariadb #points to where the mariadb Dockerfile is
+  container_name: mariadb
+  networks:
+   - inception
+  restart: always
+  environment:
+   MYSQL_DATABASE: ${MYSQL_DATABASE}
+   MYSQL_USER: ${MYSQL_USER}
+   MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+   MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+  volumes:
+   - mariadb:/var/lib/mysql #db_data volume mounted to /var/lib/mysql, makes sure the database files persis between container restarts
+ 
+ wordpress:
+  build: requirements/wordpress #points to where the Dockerfile is
+  container_name: wordpress
+  expose:
+   - 9000
+  networks:
+   - inception
+  restart: always
+  environment:
+   DOMAIN_NAME: ${DOMAIN_NAME}
+   WP_TITLE: ${WP_TITLE}
+   WP_ADMIN_USR: ${WP_ADMIN_USR}
+   WP_ADMIN_PWD: ${WP_ADMIN_PWD}
+   WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+   WP_USR: ${WP_USR}
+   WP_PWD: ${WP_PWD}
+   WP_EMAIL: ${WP_EMAIL}
+   DB_NAME: ${DB_NAME}
+   DB_USER: ${DB_USER}
+   DB_PASSWORD: ${DB_PASSWORD}
+   DB_HOST: ${DB_HOST}
+  depends_on:
+   - mariadb
+  volumes:
+   - wordpress:/var/www/html #storage for wp data files
+
+volumes:
+ wordpress:
+  name: wordpress
+  driver: local
+  driver_opts:
+   type: 'none'
+   o: 'bind'
+   device: '/home/fmarggra/data/wordpress' 
+ mariadb:
+  name: mariadb
+  driver: local
+  driver_opts:
+   type: 'none'
+   o: 'bind'
+   device: '/home/fmarggra/data/mariadb' 
+
+networks:
+ inception:
+  name: inception

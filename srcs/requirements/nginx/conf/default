@@ -1,0 +1,32 @@
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name fmarggra.42.fr;
+   
+    ssl_certificate /etc/nginx/ssl/private/nginx.crt;
+    ssl_certificate_key /etc/nginx/ssl/private/nginx.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+        # to check that TLSv1.1 is not suportet: 
+        # sudo docker exec -it nginx-container openssl s_client -connect localhost:443 -tls1_1
+   
+    root /var/www/html;
+    index index.html index.php index.nginx-debian.html;
+    
+	location / {
+        #default (but bad if it does not exist, if you want to use, remove the removal of this file from the dockerfile):
+            # index index.nginx-debian.html;
+        #alternative:
+        # autoindex on; # Allows directory listing (for debugging)
+        try_files $uri $uri/ =404;
+    }
+    
+    location ~ \.php$ {
+	    include snippets/fastcgi-php.conf;
+    
+    	# With php-fpm (or other unix sockets):
+        # fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+    	# With php-cgi (or other tcp sockets):
+        fastcgi_pass wordpress:9000;
+    }
+}
